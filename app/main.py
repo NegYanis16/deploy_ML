@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.core.lifespan import lifespan
-from app.api.routes import router
+from app.routes.routes import router
+from app import config  # Charge les variables d'environnement
 
 app = FastAPI(
     title="Futurisys ML API",
@@ -9,5 +10,5 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Ajout des routes definies dans le dossier api
+# Ajout des routes
 app.include_router(router)
