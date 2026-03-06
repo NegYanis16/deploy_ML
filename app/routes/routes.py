@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Depends
-import numpy as np
 import pandas as pd
 from io import StringIO
 from datetime import datetime
