@@ -50,7 +50,12 @@ jobs:
           HF_USERNAME: ${{ secrets.HF_USERNAME }}
           SPACE_NAME: "futurisys-ml-api" # A adapter avec le nom de ton Space
         run: |
+          git lfs install
+          git lfs track "*.joblib"
+          git add .gitattributes
           git config --global user.email "ci-cd@futurisys.com"
           git config --global user.name "GitHub Actions CI"
+          git add -A
+          git diff --cached --quiet || git commit -m "Track binary files with LFS"
           git remote add huggingface https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$SPACE_NAME
           git push --force huggingface main
