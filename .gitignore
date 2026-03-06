@@ -208,3 +208,5 @@ __marimo__/
 
 
 /notebooks
+TESTS.md
+test_employees_clean.csv

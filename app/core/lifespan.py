@@ -3,7 +3,7 @@ from fastapi import FastAPI
 import joblib
 import os
 from app.config import logger, MODEL_PATH
-
+from app.core.database import Base, engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,9 +12,7 @@ async def lifespan(app: FastAPI):
     # 1. Créer les tables si elles n'existent pas
     try:
         logger.info("Vérification et création des tables de base de données...")
-        from app.core.database import Base, engine
-        from app.models import EmployeeData, Prediction
-        
+                
         Base.metadata.create_all(bind=engine)
         logger.info("Tables de base de données vérifiées/créées avec succès")
     except Exception as e:

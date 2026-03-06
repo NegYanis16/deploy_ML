@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional
+from pydantic import BaseModel, Field
+from typing import Optional
 
 class PredictRequest(BaseModel):
     """Schéma pour une prédiction individuelle (legacy)"""
