@@ -22,9 +22,11 @@ else:
 def get_db():
     """
     Générateur de session pour FastAPI.
+    Retourne None si DATABASE_URL n'est pas défini (pas de DB disponible).
     """
     if SessionLocal is None:
-        raise RuntimeError("SessionLocal n'est pas initialisé : DATABASE_URL manquant.")
+        yield None
+        return
     db = SessionLocal()
     try:
         yield db

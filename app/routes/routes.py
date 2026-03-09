@@ -116,57 +116,67 @@ async def predict_csv(request: Request, file: UploadFile = File(...), db: Sessio
                 # Valider avec Pydantic
                 validated_data = EmployeeInputSchema(**normalized_row)
                 
-                # 1. Sauvegarder les données de l'employé (input)
-                employee = EmployeeData(
-                    age=validated_data.age,
-                    genre=validated_data.genre,
-                    revenu_mensuel=validated_data.revenu_mensuel,
-                    nombre_experiences_precedentes=validated_data.nombre_experiences_precedentes,
-                    annee_experience_totale=validated_data.annee_experience_totale,
-                    annees_dans_l_entreprise=validated_data.annees_dans_l_entreprise,
-                    annees_dans_le_poste_actuel=validated_data.annees_dans_le_poste_actuel,
-                    satisfaction_employee_environnement=validated_data.satisfaction_employee_environnement,
-                    note_evaluation_precedente=validated_data.note_evaluation_precedente,
-                    satisfaction_employee_nature_travail=validated_data.satisfaction_employee_nature_travail,
-                    satisfaction_employee_equipe=validated_data.satisfaction_employee_equipe,
-                    satisfaction_employee_equilibre_pro_perso=validated_data.satisfaction_employee_equilibre_pro_perso,
-                    note_evaluation_actuelle=validated_data.note_evaluation_actuelle,
-                    heure_supplementaires=validated_data.heure_supplementaires,
-                    augementation_salaire_precedente=validated_data.augementation_salaire_precedente,
-                    nombre_participation_pee=validated_data.nombre_participation_pee,
-                    nb_formations_suivies=validated_data.nb_formations_suivies,
-                    distance_domicile_travail=validated_data.distance_domicile_travail,
-                    niveau_education=validated_data.niveau_education,
-                    ayant_enfants=validated_data.ayant_enfants,
-                    frequence_deplacement=validated_data.frequence_deplacement,
-                    annees_depuis_la_derniere_promotion=validated_data.annees_depuis_la_derniere_promotion,
-                    annes_sous_responsable_actuel=validated_data.annes_sous_responsable_actuel,
-                    departement="Consulting" if row.get('departement_Consulting') == 1 else "Ressources Humaines",
-                    poste=_get_poste_from_row(row),
-                    domaine_etude=_get_domaine_from_row(row),
-                    statut_marital=_get_statut_marital_from_row(row)
-                )
-                db.add(employee)
-                db.flush()
-                
-                # 2. Sauvegarder la prédiction (output)
-                risk_level = "High" if proba > 0.35 else "Low"
-                prediction_record = Prediction(
-                    employee_id=employee.id,
-                    prediction=int(pred),
-                    probability=float(proba),
-                    risk_level=risk_level,
-                    batch_id=batch_id
-                )
-                db.add(prediction_record)
-                
-                results.append({
-                    "employee_index": idx,
-                    "employee_id": employee.id,
-                    "prediction": int(pred),
-                    "probability": float(proba),
-                    "risk_level": risk_level
-                })
+                if db is not None:
+                    # 1. Sauvegarder les données de l'employé (input)
+                    employee = EmployeeData(
+                        age=validated_data.age,
+                        genre=validated_data.genre,
+                        revenu_mensuel=validated_data.revenu_mensuel,
+                        nombre_experiences_precedentes=validated_data.nombre_experiences_precedentes,
+                        annee_experience_totale=validated_data.annee_experience_totale,
+                        annees_dans_l_entreprise=validated_data.annees_dans_l_entreprise,
+                        annees_dans_le_poste_actuel=validated_data.annees_dans_le_poste_actuel,
+                        satisfaction_employee_environnement=validated_data.satisfaction_employee_environnement,
+                        note_evaluation_precedente=validated_data.note_evaluation_precedente,
+                        satisfaction_employee_nature_travail=validated_data.satisfaction_employee_nature_travail,
+                        satisfaction_employee_equipe=validated_data.satisfaction_employee_equipe,
+                        satisfaction_employee_equilibre_pro_perso=validated_data.satisfaction_employee_equilibre_pro_perso,
+                        note_evaluation_actuelle=validated_data.note_evaluation_actuelle,
+                        heure_supplementaires=validated_data.heure_supplementaires,
+                        augementation_salaire_precedente=validated_data.augementation_salaire_precedente,
+                        nombre_participation_pee=validated_data.nombre_participation_pee,
+                        nb_formations_suivies=validated_data.nb_formations_suivies,
+                        distance_domicile_travail=validated_data.distance_domicile_travail,
+                        niveau_education=validated_data.niveau_education,
+                        ayant_enfants=validated_data.ayant_enfants,
+                        frequence_deplacement=validated_data.frequence_deplacement,
+                        annees_depuis_la_derniere_promotion=validated_data.annees_depuis_la_derniere_promotion,
+                        annes_sous_responsable_actuel=validated_data.annes_sous_responsable_actuel,
+                        departement="Consulting" if row.get('departement_Consulting') == 1 else "Ressources Humaines",
+                        poste=_get_poste_from_row(row),
+                        domaine_etude=_get_domaine_from_row(row),
+                        statut_marital=_get_statut_marital_from_row(row)
+                    )
+                    db.add(employee)
+                    db.flush()
+                    
+                    # 2. Sauvegarder la prédiction (output)
+                    risk_level = "High" if proba > 0.35 else "Low"
+                    prediction_record = Prediction(
+                        employee_id=employee.id,
+                        prediction=int(pred),
+                        probability=float(proba),
+                        risk_level=risk_level,
+                        batch_id=batch_id
+                    )
+                    db.add(prediction_record)
+                    
+                    results.append({
+                        "employee_index": idx,
+                        "employee_id": employee.id,
+                        "prediction": int(pred),
+                        "probability": float(proba),
+                        "risk_level": risk_level
+                    })
+                else:
+                    risk_level = "High" if proba > 0.35 else "Low"
+                    results.append({
+                        "employee_index": idx,
+                        "employee_id": None,
+                        "prediction": int(pred),
+                        "probability": float(proba),
+                        "risk_level": risk_level
+                    })
                 
             except ValidationError as ve:
                 validation_errors.append({
@@ -177,7 +187,8 @@ async def predict_csv(request: Request, file: UploadFile = File(...), db: Sessio
         
         # Si des erreurs de validation, on annule tout
         if validation_errors:
-            db.rollback()
+            if db is not None:
+                db.rollback()
             logger.error(f"{len(validation_errors)} erreurs de validation détectées")
             raise HTTPException(
                 status_code=422, 
@@ -187,8 +198,9 @@ async def predict_csv(request: Request, file: UploadFile = File(...), db: Sessio
                 }
             )
         
-        # Commit toutes les données
-        db.commit()
+        # Commit toutes les données si DB disponible
+        if db is not None:
+            db.commit()
         
         logger.info(f"Prédictions effectuées et sauvegardées pour {len(results)} employés (batch_id: {batch_id})")
         
@@ -204,7 +216,8 @@ async def predict_csv(request: Request, file: UploadFile = File(...), db: Sessio
         logger.error(f"Colonne manquante dans le CSV: {e}")
         raise HTTPException(status_code=400, detail=f"Colonne manquante dans le CSV: {str(e)}")
     except Exception as e:
-        db.rollback()
+        if db is not None:
+            db.rollback()
         logger.error(f"Erreur lors de la prédiction: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
