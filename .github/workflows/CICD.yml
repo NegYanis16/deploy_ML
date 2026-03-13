@@ -48,7 +48,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_USERNAME: ${{ secrets.HF_USERNAME }}
-          SPACE_NAME: "futurisys-ml-api" # A adapter avec le nom de ton Space
+          SPACE_NAME: "futurisys-ml-api" 
         run: |
           git lfs install
           git lfs track "*.joblib"
